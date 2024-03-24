@@ -1,0 +1,25 @@
+"0","dat %>%
+  select(starts_with(""UCLA20"")) %>%
+  select(-UCLA20_TOT) %>%
+  psych::alpha()
+"
+"2","Warning: Some items were negatively correlated with the total scale and probably 
+should be reversed.  
+To do this, run the function again with the 'check.keys=TRUE' option"
+"1","Some items ("
+"1"," "
+"1","UCLA20_1"
+"1"," "
+"1",") were negatively correlated with the total scale and 
+probably should be reversed.  
+To do this, run the function again with the 'check.keys=TRUE' option"
+"1","
+Reliability analysis "
+"1"," "
+"1"," 
+"
+"1","Call: "
+"1","psych::alpha(x = .)
+"
+"1","
+ "

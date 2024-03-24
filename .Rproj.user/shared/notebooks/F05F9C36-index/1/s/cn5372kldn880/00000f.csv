@@ -1,0 +1,5 @@
+"0","ggscatterstats(dat, UCLA3_TOT, UCLA20_TOT,"
+"0","             bf.message = FALSE,"
+"0","             ylab = ""UCLA-3 scale"","
+"0","             xlab = ""UCLA-20 scale"")"
+"0",""

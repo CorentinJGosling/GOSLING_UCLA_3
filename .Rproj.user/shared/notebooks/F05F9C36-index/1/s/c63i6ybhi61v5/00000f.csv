@@ -1,0 +1,6 @@
+"0","mean(dat[dat$Marital_status==""Single"", ""UCLA3_TOT""])
+"
+"1","[1]"
+"1"," 5.357905"
+"1","
+"

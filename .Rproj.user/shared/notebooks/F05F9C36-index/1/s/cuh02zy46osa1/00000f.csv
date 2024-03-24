@@ -1,5 +1,0 @@
-"0","dat = cbind(db_demo, db_uc3, db_uc20, db_phq, "
-"0","            db_gad, db_mbi_ss, db_mbi_hss)"
-"0",""
-"0","# Financ_diff "
-"0","# UCLA3_TOT UCLA20_TOT PHQ_TOT GAD_TOT MBI_SS_TOT MBI_HSS_TOT"

@@ -1,0 +1,6 @@
+"0","heat = data.frame(apply(dat[,c("
+"0","               ""PHQ_TOT"",""GAD_TOT"","
+"0","               ""Age_dim"", ""Financ_diff"","
+"0","               ""Marital_status"", ""Year_stud"", ""UCLA3_TOT"", ""UCLA20_TOT"")], 2, as.numeric))"
+"2","Warning: NAs introduced by coercion"
+"0","ggstatsplot::ggcorrmat(heat)"
