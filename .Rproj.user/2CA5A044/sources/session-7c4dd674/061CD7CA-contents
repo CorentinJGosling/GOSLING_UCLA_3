@@ -1,0 +1,1645 @@
+---
+title: "Sev Euillet - Analyses"
+author: "CJ Gosling & S Caparos"
+date: '2023-10-01'
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 2
+---
+```{r, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+library(tidyverse)
+library(ggstatsplot)
+library(car)
+library(emmeans)
+library(GGally)
+```
+
+
+```{r echo=FALSE}
+dat = readxl::read_excel("data_analyses1.xlsx") %>%
+  filter(!is.na(Q1_AF4_NB_ENF) & !is.na(Q1_AF2_SEX) & !is.na(Q1_AF1_ANCIEN))
+
+cols.num <- c('Q1_AF4_NB_ENF', 'Q1_AF2_SEX', 'Q1_AF1_ANCIEN', 'Q2_6_FREQ_RECUEIL_AVIS',
+              'Q3_2_DAV_AVIS',
+             'Q2_PERCEP_ENF_PRO', 'Q2_PERCEP_ENF_GEN', 'Q2_3_INFO_MESURE',
+             "Q5_1_parti_insti", 
+             "Q5_3_parti_insti",
+             "Q5_4_MOD_SOUHAIT_PART",
+"Q5_6_EQUIP_PPE", "Q5_9_ECOUTE_ENFANT",
+"Q5_2_AF", "Q5_2_PAR",    
+"Q5_2_JUG", "Q5_2_RTASE",  
+"Q5_2_REN", "Q5_2_RSE", "Q5_2_PSE_ASE"
+             )
+
+dat[, cols.num] <- sapply(dat[, cols.num], as.numeric)
+
+dat[,which(grepl("Q5_3", colnames(dat), fixed = TRUE))] <- sapply(dat[,which(grepl("Q5_3", colnames(dat), fixed = TRUE))], as.numeric)
+dat[,which(grepl("Q3_1_DIM", colnames(dat), fixed = TRUE))] <- sapply(dat[,which(grepl("Q3_1_DIM", colnames(dat), fixed = TRUE))], as.numeric)
+
+dat[,which(grepl("Q2_2", colnames(dat), fixed = TRUE))] <- sapply(dat[,which(grepl("Q2_2", colnames(dat), fixed = TRUE))], as.numeric)
+dat[,which(grepl("Q2_8_", colnames(dat), fixed = TRUE))] <- sapply(dat[,which(grepl("Q2_8_", colnames(dat), fixed = TRUE))], as.numeric)
+
+dat$Q1_AF2_SEX[dat$Q1_AF2_SEX==0] <- "Homme"
+dat$Q1_AF2_SEX[dat$Q1_AF2_SEX==1] <- "Femme"
+dat$Q1_AF1_ANCIEN[dat$Q1_AF1_ANCIEN==1] <- "<3ans"
+dat$Q1_AF1_ANCIEN[dat$Q1_AF1_ANCIEN==2] <- "3-8ans"
+dat$Q1_AF1_ANCIEN[dat$Q1_AF1_ANCIEN==3] <- ">8ans"
+dat$Q1_AF1_ANCIEN <- factor(dat$Q1_AF1_ANCIEN, 
+                            levels=c('<3ans', "3-8ans",">8ans"))
+dat$Q5_7_LEG_AF[dat$Q5_7_LEG_AF==0] <- "Pas légitime"
+dat$Q5_7_LEG_AF[dat$Q5_7_LEG_AF==2] <- "Légitime"
+dat$Q5_7_LEG_AF <- factor(dat$Q5_7_LEG_AF, 
+                            levels=c('Pas légitime', "Légitime"))
+
+```
+
+\newpage{}
+
+# Hypothèse 1: Lien entre le profile des AF et la participation des enfants
+
+## Variable profile 1 : nombre d'enfants
+
+### Nombre enfants => participation institutionnelle (1)
+```{r, echo=FALSE, fig.height = 5}
+ggbetweenstats(dat, Q1_AF4_NB_ENF,
+               Q5_1_parti_insti,
+               bf.message = FALSE,
+               ylab = "Participation\n institutionnelle (1)",
+               xlab = "Nombre d'enfants")
+```
+
+\newpage{}
+
+### Nombre enfants => Participation institutionnelle (2)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF4_NB_ENF, Q5_3_parti_insti,
+               bf.message = FALSE,
+               ylab = "Participation\n institutionnelle (2)",
+               xlab = "Nombre d'enfants")
+```
+\newpage{}
+
+### Nombre enfants => Participation PPE
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF4_NB_ENF, Q5_4_MOD_SOUHAIT_PART, 
+           bf.message = FALSE,
+           ylab = "Participation PPE",
+           xlab = "Nombre d'enfants")
+```
+\newpage{}
+
+### Nombre enfants => Participation VQ
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF4_NB_ENF, Q3_1_AVIS_VQ_ENF, 
+           bf.message = FALSE,
+           ylab = "Participation VQ",
+           xlab = "Nombre d'enfants")
+```
+\newpage{}
+
+## Variable profile 2 : Sexe
+
+### Nombre enfants => participation institutionnelle (1)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF2_SEX,
+               Q5_1_parti_insti,
+               bf.message = FALSE,
+               ylab = "Participation\n institutionnelle (1)",
+               xlab = "Sexe")
+```
+\newpage{}
+
+### Sexe => Participation institutionnelle (2)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF2_SEX, Q5_3_parti_insti,
+               bf.message = FALSE,
+               ylab = "Participation\n institutionnelle (2)",
+               xlab = "Sexe")
+```
+\newpage{}
+
+### Sexe => Participation PPE
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF2_SEX, Q5_4_MOD_SOUHAIT_PART, 
+           bf.message = FALSE,
+           ylab = "Participation PPE",
+           xlab = "Sexe")
+```
+\newpage{}
+
+### Sexe => Participation VQ
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF2_SEX, Q3_1_AVIS_VQ_ENF, 
+           bf.message = FALSE,
+           ylab = "Participation VQ",
+           xlab = "Sexe")
+```
+\newpage{}
+
+## Variable profile 3 : Ancienneté
+
+### Ancienneté => participation institutionnelle (1)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+               Q5_1_parti_insti,
+               bf.message = FALSE,
+               ylab = "Participation\n institutionnelle (1)",
+               xlab = "Ancienneté")
+```
+\newpage{}
+
+### Ancienneté => Participation institutionnelle (2)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF1_ANCIEN, Q5_3_parti_insti,
+               bf.message = FALSE,
+               ylab = "Participation\n institutionnelle (2)",
+               xlab = "Ancienneté")
+```
+\newpage{}
+
+### Ancienneté => Participation PPE
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF1_ANCIEN, Q5_4_MOD_SOUHAIT_PART, 
+           bf.message = FALSE,
+           ylab = "Participation PPE",
+           xlab = "Ancienneté")
+```
+\newpage{}
+
+### Ancienneté => Participation VQ
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q1_AF1_ANCIEN, Q3_1_AVIS_VQ_ENF, 
+           bf.message = FALSE,
+           ylab = "Participation VQ",
+           xlab = "Ancienneté")
+```
+
+\newpage{}
+
+# Hypothèse 2: Lien entre le profile des AF et le sentiment de légitimité des AF
+
+### Nombre d'enfants => légitimité
+```{r, echo=FALSE}
+ggbarstats(dat, Q5_7_LEG_AF, Q1_AF4_NB_ENF, 
+           legend.title = "Legitimité",
+           bf.message = FALSE,
+           ylab = "",
+           xlab = "Nombre d'enfants")
+```
+\newpage{}
+
+### Sexe => légitimité
+```{r, echo=FALSE}
+ggbarstats(dat, Q5_7_LEG_AF, Q1_AF2_SEX, 
+           legend.title = "Legitimité",
+           bf.message = FALSE,
+           ylab = "",
+           xlab = "Sexe")
+```
+\newpage{}
+
+### Ancienneté => légitimité
+```{r, echo=FALSE}
+ggbarstats(dat, Q5_7_LEG_AF, Q1_AF1_ANCIEN,
+           legend.title = "Legitimité",
+           bf.message = FALSE,
+           ylab = "",
+           xlab = "Ancienneté")
+```
+
+\newpage{}
+
+# Hypothèse 3: Lien entre le sentiment de légitimité des AF et la participation des enfants
+
+### légitimité => participation institutionnelle (1)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q5_7_LEG_AF, Q5_1_parti_insti, 
+           bf.message = FALSE,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "Legitimité")
+```
+\newpage{}
+
+### légitimité => participation institutionnelle (2)
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q5_7_LEG_AF, Q5_3_parti_insti, 
+           bf.message = FALSE,
+           ylab = "Participation institutionnelle (2)",
+           xlab = "Legitimité")
+```
+\newpage{}
+
+### légitimité => participation PPE
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q5_7_LEG_AF, Q5_4_MOD_SOUHAIT_PART, 
+           bf.message = FALSE,
+           ylab = "Participation PPE",
+           xlab = "Legitimité")
+```
+\newpage{}
+
+### légitimité => participation VQ 
+```{r, echo=FALSE}
+ggbetweenstats(dat, Q5_7_LEG_AF, Q3_1_AVIS_VQ_ENF, 
+           bf.message = FALSE,
+           ylab = "Participation VQ",
+           xlab = "Legitimité")
+```
+
+\newpage{}
+
+# Hypothèse 4: Exploration des prédicteurs de la participation institutionnelle (1)
+
+## Prédicteur = Perception de l'enfant
+```{r, fig.height=5, echo=FALSE, warning=FALSE}
+my_fn <- function(data, mapping, ...){
+  p <- suppressWarnings(ggplot(data = data, mapping = mapping) + 
+    geom_point() + 
+    geom_smooth(formula = y ~ x, method = "loess", fill="red", color="red", ...)) 
+  p
+}
+dat$Q2_3_INFO_MESURE = factor(dat$Q2_3_INFO_MESURE)
+GGally::ggpairs(
+  dat %>%
+    select(Q5_1_parti_insti,
+           Q2_PERCEP_ENF_GEN,
+           Q2_PERCEP_ENF_PRO),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+
+```{r, fig.height=5, echo=FALSE, warning=FALSE}
+GGally::ggbivariate(dat, outcome = "Q5_1_parti_insti", explanatory = c("Q2_3_INFO_MESURE", "Q2_6_FREQ_RECUEIL_AVIS")) 
+```
+
+\newpage{}
+
+## Prédicteur = Perception de l'enfant
+```{r, fig.height=12, fig.width=12,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_1_parti_insti,
+           starts_with("Q2_8")),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+\newpage{}
+
+## Prédicteur = Implication citoyenne de l'enfant 
+```{r, fig.height=7,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_1_parti_insti,
+           Q4_1_PART_CIT, Q4_2BIS_CIT),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+
+\newpage{}
+
+## Prédicteur = Travail d'équipe / sentiment d'écoute
+```{r, fig.height=7,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_1_parti_insti,
+           Q5_6_EQUIP_PPE, Q5_9_ECOUTE_ENFANT),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+
+\newpage{}
+
+## Prédicteur = Recueil avis enfant (Fréquence suffisante)
+```{r, fig.height=7,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_1_parti_insti,
+           Q3_2_DAV_AVIS),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+
+# Hypothèse 5: Exploration des prédicteurs de la participation institutionnelle (2)
+
+## Prédicteur = Perception de l'enfant
+```{r, fig.height=5, echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_3_parti_insti,
+           Q2_PERCEP_ENF_GEN,
+           Q2_PERCEP_ENF_PRO),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+
+```{r, fig.height=5, echo=FALSE, warning=FALSE}
+GGally::ggbivariate(dat, outcome = "Q5_1_parti_insti", explanatory = c("Q2_3_INFO_MESURE", "Q2_6_FREQ_RECUEIL_AVIS")) 
+```
+
+\newpage{}
+
+## Prédicteur = Perception de l'enfant
+```{r, fig.height=12, fig.width=12,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_3_parti_insti,
+           starts_with("Q2_8")),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+\newpage{}
+
+## Prédicteur = Implication citoyenne de l'enfant 
+```{r, fig.height=7,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_3_parti_insti,
+           Q4_1_PART_CIT, Q4_2BIS_CIT),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+
+\newpage{}
+
+## Prédicteur = Travail d'équipe / sentiment d'écoute
+```{r, fig.height=7,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_3_parti_insti,
+           Q5_6_EQUIP_PPE, Q5_9_ECOUTE_ENFANT),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+
+\newpage{}
+
+## Prédicteur = Recueil avis enfant (Fréquence suffisante)
+```{r, fig.height=7,  echo=FALSE, warning=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q5_3_parti_insti,
+           Q3_2_DAV_AVIS),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+\newpage{}
+
+# Hypothèse 6: Lien entre la participation citoyenne et la participation des enfants
+
+### participation citoyenne => participation institutionnelle (1)
+
+### moins 16ans
+
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_1_PART_CIT, Q5_1_parti_insti, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (-16)")+
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### plus 16 ans
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_2BIS_CIT, Q5_1_parti_insti, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (+16)") +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### participation citoyenne => participation institutionnelle (2)
+
+### moins 16ans
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_1_PART_CIT, Q5_3_parti_insti, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (-16)")+
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### plus 16 ans
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_2BIS_CIT, Q5_3_parti_insti, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (+16)") +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### participation citoyenne => participation PPE
+
+### moins 16ans
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_1_PART_CIT, Q5_4_MOD_SOUHAIT_PART, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (-16)")+
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### plus 16 ans
+
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_2BIS_CIT, Q5_4_MOD_SOUHAIT_PART, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (+16)") +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### participation citoyenne => participation VQ 
+
+### moins 16ans
+
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_1_PART_CIT, Q3_1_AVIS_VQ_ENF, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (-16)")+
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+### plus 16 ans
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat, Q4_2BIS_CIT, Q3_1_AVIS_VQ_ENF, 
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "participation citoyenne (+16)") +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+# Analyses complémentaires ----------------
+
+# le score AF se dégage du score des autres pros
+```{r, echo=FALSE}
+dat_bar = dat %>%
+  mutate(ID=1:nrow(dat)) %>%
+  select(ID, starts_with("Q3_1_AVIS")) %>%
+  pivot_longer(cols=starts_with("Q3_1_AVIS"), names_to="Q3", values_to = "value") 
+
+dat_bar_agg =  dat_bar %>%
+  group_by(Q3) %>%
+  summarise(sd = sd(value),
+            value = mean(value)
+            ) %>%
+  mutate(ylo = ifelse(value-sd < 0, 0, value-sd), 
+         yup = value+sd)
+dat_bar$Q3 = gsub("Q3_1_AVIS_", "", dat_bar$Q3)
+p1 = glm(value ~ Q3,
+          data=dat_bar,
+          family="poisson")
+
+Anova(p1, type="II",test="LR")
+
+marg = emmeans(p1,~ Q3)
+pairs(marg, adjust="tukey")
+
+ggplot(dat_bar_agg, aes(x = Q3, y = value, fill = Q3)) + 
+  geom_bar(stat = "identity", alpha = 0.5) +
+  coord_flip() +
+  labs(y="Nombre moyen de citations par participant") +
+  theme_bw() +
+  theme(legend.position="none")
+  
+```
+
+\newpage{}
+
+# le score AF à cette question (Q3.1 AF) est lié à la question Q5.2 
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+GGally::ggpairs(
+  dat %>%
+    select(Q3_1_AVIS_VQ_AF,
+           starts_with("Q5_2_")),
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+\newpage{}
+
+# Explorer les liens **AU SEIN** ces sous-dimensions entre elles si possible (nous avons checké au sein des sous dimensions)
+
+## Amicale
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat_dim = dat %>%
+  select(starts_with("Q3_1_DIM"))
+
+dat_dim_ami = dat_dim[, which(grepl("AMICALE", colnames(dat_dim), fixed = TRUE))]
+dat$Q3_DIM_AMI = apply(dat_dim_ami, 1, sum)
+
+dat_dim_ami %>%
+  psy::cronbach()
+
+colnames(dat_dim_ami) <- gsub("Q3_1_DIM_AMICALE_", "", colnames(dat_dim_ami))
+GGally::ggpairs(
+  dat_dim_ami,
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+
+```
+
+\newpage{}
+
+## Autonomie
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat_dim_auto = dat_dim[, which(grepl("AUTO", colnames(dat_dim), fixed = TRUE))]
+dat$Q3_DIM_AUTO = apply(dat_dim_auto, 1, sum)
+dat_dim_auto %>%
+  psy::cronbach()
+colnames(dat_dim_auto) <- gsub("Q3_1_DIM_AUTO_", "", colnames(dat_dim_auto))
+
+GGally::ggpairs(
+  dat_dim_auto,
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+\newpage{}
+
+## Sortie
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat_dim_sor = dat_dim[, which(grepl("SORTIE", colnames(dat_dim), fixed = TRUE))]
+dat$Q3_DIM_SORTIE = apply(dat_dim_sor, 1, sum)
+dat_dim_sor %>%
+  psy::cronbach()
+colnames(dat_dim_sor) <- gsub("Q3_1_DIM_SORTIE_", "", colnames(dat_dim_sor))
+
+GGally::ggpairs(
+  dat_dim_sor,
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+
+\newpage{}
+
+## Loisirs
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat_dim_lois = dat_dim[, which(grepl("LOISIR", colnames(dat_dim), fixed = TRUE))]
+dat$Q3_DIM_LOISIR = apply(dat_dim_lois, 1, sum)
+dat_dim_lois %>%
+  psy::cronbach()
+colnames(dat_dim_lois) <- gsub("Q3_1_DIM_LOISIR_", "", colnames(dat_dim_lois))
+
+GGally::ggpairs(
+  dat_dim_lois,
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+\newpage{}
+
+## Education
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat_dim_edu = dat_dim[, which(grepl("EDU", colnames(dat_dim), fixed = TRUE))]
+dat$Q3_DIM_EDU = apply(dat_dim_edu, 1, sum)
+dat_dim_edu %>%
+  psy::cronbach()
+colnames(dat_dim_edu) <- gsub("Q3_1_DIM_EDU_", "", colnames(dat_dim_edu))
+
+GGally::ggpairs(
+  dat_dim_edu,
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+\newpage{}
+
+## Religion
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat_dim_rel = dat_dim[, which(grepl("RELIGION", colnames(dat_dim), fixed = TRUE))]
+dat$Q3_DIM_RELIG = apply(dat_dim_rel, 1, sum)
+dat_dim_rel %>%
+  psy::cronbach()
+colnames(dat_dim_rel) <- gsub("Q3_1_DIM_RELIGION_", "", colnames(dat_dim_rel))
+
+GGally::ggpairs(
+  dat_dim_rel,
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  )
+```
+
+\newpage{}
+
+# Explorer les liens **ENTRE** ces sous-dimensions entre elles si possible 
+```{r, echo=FALSE}
+dat[, c("Q3_DIM_AMI", 
+          "Q3_DIM_AUTO",
+          "Q3_DIM_SORTIE",
+          "Q3_DIM_LOISIR",
+          "Q3_DIM_EDU",
+          "Q3_DIM_RELIG")] %>%
+  psy::cronbach()
+
+GGally::ggpairs(
+  dat[, c("Q3_DIM_AMI", 
+          "Q3_DIM_AUTO",
+          "Q3_DIM_SORTIE",
+          "Q3_DIM_LOISIR",
+          "Q3_DIM_EDU",
+          "Q3_DIM_RELIG")],
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+
+dat$Q3_DIM_TOT = apply(dat[, c("Q3_DIM_AMI", 
+          "Q3_DIM_AUTO",
+          "Q3_DIM_SORTIE",
+          "Q3_DIM_LOISIR",
+          "Q3_DIM_EDU",
+          "Q3_DIM_RELIG")], 1, mean)
+```
+
+
+\newpage{}
+
+#	Explorer les liens entre ces sous-dimensions et : la PI 1 :Q5.1 ?
+
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat,
+               Q3_DIM_TOT, 
+               Q5_1_parti_insti,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "Score total Vie Quotidienne\n (implication de tous les interventions dans\n tous les aspects de la vie de l'enfant)") +
+  ggplot2::geom_rug(sides = "b")
+
+```
+
+\newpage{}
+
+#	Explorer les liens entre ces sous-dimensions et : Chacune de ces 6 dimensions en lien avec la PI 2 : Q5.3 ?
+
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat,
+               Q3_DIM_TOT, 
+               Q5_3_parti_insti,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (2)",
+           xlab = "Score total Vie Quotidienne\n (implication de tous les interventions dans\n tous les aspects de la vie de l'enfant)") +
+  ggplot2::geom_rug(sides = "b")
+
+```
+
+\newpage{}
+
+#	Lien entre les questions Q5.2 et Q2.8 : vérifier la Cohérence des réponses
+
+## Cohérence AF 
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q5_2_AF, 
+               Q2_8_AF,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+## Cohérence RTASE <br>
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q5_2_RTASE, 
+               Q2_8_RTASE,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+## Cohérence Psychologue ASD <br>
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q5_2_PSE_ASE, 
+               Q2_8_PSYCH,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+## Cohérence Parents <br>
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q5_2_PAR, 
+               Q2_8_PAR,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+## Cohérence Responsable service enfance <br>
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q5_2_RSE, 
+               Q2_8_PART_RSE,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+## Cohérence responsable enfance <br>
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q5_2_REN, 
+               Q2_8_REF,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+#	Lien entre les questions Q2.6 et Q3.2 
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbarstats(dat, Q2_6_FREQ_RECUEIL_AVIS, Q3_2_DAV_AVIS, 
+           legend.title = "Nécessite de + \nrecueillir avis",
+           bf.message = FALSE,
+           ylab = "Nécessité de + donner son avis",
+           xlab = "")
+```
+
+\newpage{}
+
+#	Lien entre les questions Q2.2 et Q2.8 
+```{r, echo=FALSE, message=FALSE, results='hide'}
+dat[, c("Q2_2_PE1_JUGE", "Q2_2_PE2_REF_ASE", 
+        "Q2_2_PE3_AF", "Q2_2_PE4_PSY",
+        "Q2_2_PE5_RESP_TERR")] %>%
+  psy::cronbach()
+
+dat %>%
+  select(starts_with("Q2_8")) %>%
+  psy::cronbach()
+```
+
+\newpage{}
+
+
+## Cohérence Juge
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q2_2_PE1_JUGE, 
+               Q2_8_JUGE,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+
+## Cohérence responsable enfance
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q2_2_PE2_REF_ASE, 
+               Q2_8_REF,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+  
+
+\newpage{}
+
+
+## Cohérence AF
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q2_2_PE3_AF, 
+               Q2_8_AF,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+
+## Cohérence Psy
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q2_2_PE4_PSY, 
+               Q2_8_PSYCH,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+
+## Cohérence responsable territorial
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat,
+               Q2_2_PE5_RESP_TERR, 
+               Q2_8_RTASE,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+```
+
+\newpage{}
+
+# Analyses descriptives
+
+## Q5.1 (ce que vous avez appelé participation institutionnelle1)
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggplot(dat, aes(x = Q5_1_parti_insti)) +
+  geom_bar(alpha=0.7) +
+  theme_bw()
+```
+
+\newpage{}
+
+## Q5.3 (ce que vous avez appelé participation institutionnelle 2)
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat[, c("Q5_3_1","Q5_3_2", "Q5_3_3", "Q5_3_4")] %>%
+  psy::cronbach()
+dat_long = dat[, c("Q5_3_1","Q5_3_2", "Q5_3_3", "Q5_3_4")] %>%
+  pivot_longer(cols=everything(), names_to="Q5_3", values_to="values") %>%
+  mutate(values=as.numeric(values))
+dat_long$Q5_3[dat_long$Q5_3=="Q5_3_4"] <- "Réu synthèse"
+dat_long$Q5_3[dat_long$Q5_3=="Q5_3_1"] <- "Réu école"
+dat_long$Q5_3[dat_long$Q5_3=="Q5_3_2"] <- "Réu PPE"
+dat_long$Q5_3[dat_long$Q5_3=="Q5_3_3"] <- "Réu suivi spé"
+ggbetweenstats(dat_long, Q5_3,
+               values,
+               bf.message = FALSE,
+               ylab = "Niveau de participation",
+               xlab = "Types de réunions")
+
+```
+
+\newpage{}
+
+## Q5.4 : participation souhaitée au PPE
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat[, c("INFORME","CONSULTE", "ENTENDU", "PARTICIPER_PHY", "COMPTE_RENDU")] %>%
+  mutate_if(is.character, as.numeric) %>%
+  psy::cronbach()
+
+dat_long = dat[, c("INFORME","CONSULTE", "ENTENDU", "PARTICIPER_PHY", "COMPTE_RENDU")] %>%
+  pivot_longer(cols=everything(), names_to="Q5_4", values_to="values") %>%
+  mutate(values=as.numeric(values))
+
+ggbarstats(dat_long, 
+           values,
+           Q5_4,
+           bf.message = FALSE,
+           ylab = "Participation souhaitée",
+           xlab = "Type de participation")
+
+```
+
+\newpage{}
+
+## Q4.1 : Participation citoyenne
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat[, c("DELEGUE","ELU", "INIT_CITOYENNE", "MEMBRE_ASSO")] %>%
+  mutate_if(is.character, as.numeric) %>%
+  psy::cronbach()
+
+dat_long = dat[, c("DELEGUE","ELU", "INIT_CITOYENNE", "MEMBRE_ASSO")] %>%
+  pivot_longer(cols=everything(), names_to="Q4_1", values_to="values") %>%
+  mutate(values=case_when(values=="1"~"oui",
+                          values=="0"~"non"))
+
+ggbarstats(dat_long, 
+           values,
+           Q4_1,
+           bf.message = FALSE,
+           ylab = "",
+           xlab = "Type de participation")
+
+```
+
+\newpage{}
+
+
+## Q4.2 : participation citoyenne plus de 16 ans
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat[, c("BAFA", "CONDUITE_ACC", "PERMIS", "LISTE_ELEC")] %>%
+  mutate_if(is.character, as.numeric) %>%
+  psy::cronbach()
+
+dat_long = dat[, c("BAFA", "CONDUITE_ACC", "PERMIS", "LISTE_ELEC")] %>%
+  pivot_longer(cols=everything(), names_to="Q4_2", values_to="values") %>%
+  mutate(values=case_when(values=="0"~"Aucun Jeune",
+                          values=="1"~"Quelques jeunes",
+                          values=="2"~"Tous les jeunes"))
+
+ggbarstats(dat_long, 
+           values,
+           Q4_2,
+           bf.message = FALSE,
+           ylab = "",
+           xlab = "Type de participation")
+
+```
+
+
+\newpage{}
+
+## Q3.1 : participation à la vie quotidienne de l’enfant 
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat[, c("Q3_1_AVIS_VQ_ENF", "Q3_1_AVIS_VQ_PARENT", "Q3_1_AVIS_VQ_AF", "Q3_1_AVIS_VQ_REFASE", "Q3_1_AVIS_VQ_CONSFAM", "Q3_1_AVIS_VQ_JUGE", "Q3_1_AVIS_VQ_CAD_ASE")] %>%
+  mutate_if(is.character, as.numeric) %>%
+  psy::cronbach()
+
+dat_long = dat[, c("Q3_1_AVIS_VQ_AF", "Q3_1_AVIS_VQ_ENF", "Q3_1_AVIS_VQ_PARENT",  "Q3_1_AVIS_VQ_REFASE", "Q3_1_AVIS_VQ_CONSFAM", "Q3_1_AVIS_VQ_JUGE", "Q3_1_AVIS_VQ_CAD_ASE")] %>%
+  pivot_longer(cols=everything(), names_to="Q3_1", values_to="values") %>%
+  mutate(values=as.numeric(values))
+dat_long$Q3_1 = gsub("Q3_1_AVIS_VQ_", "", dat_long$Q3_1)
+ggbetweenstats(dat_long, Q3_1, values, 
+           bf.message = FALSE,
+           ylab = "Avis sur la participation à la VQ",
+           xlab = "Type de répondants")
+
+```
+
+\newpage{}
+
+
+## Q21+Q25 = Est-il possible de créer aussi un score général de participation à la mesure qui le concerne en additionnant les scores des questions Q2.1 et Q2.5 ? 
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+ggscatterstats(dat,
+               Q2_5_AVIS_ENFANT, 
+               Q2_PERCEP_ENF_GEN,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3) +
+  ggplot2::geom_rug(sides = "b")
+
+dat$Q2_PERCEP_ENF_GEN_Z = scale(dat$Q2_PERCEP_ENF_GEN)
+dat$Q2_5_AVIS_ENFANT_Z = scale(dat$Q2_5_AVIS_ENFANT)
+dat$Q21_Q25 = apply(dat[, c("Q2_PERCEP_ENF_GEN_Z", "Q2_5_AVIS_ENFANT_Z")], 1, function(x) mean(x, na.rm=TRUE))
+```
+
+\newpage{}
+
+## Analyse de la perception des rôles des AF par les enfants :
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+dat$Q5_7_LEG_AF_NUM = as.character(dat$Q5_7_LEG_AF)
+dat$Q5_7_LEG_AF_NUM[dat$Q5_7_LEG_AF_NUM == "Légitime"] <- "1"
+dat$Q5_7_LEG_AF_NUM[dat$Q5_7_LEG_AF_NUM == "Pas légitime"] <- "0"
+dat$Q5_7_LEG_AF_NUM = as.numeric(dat$Q5_7_LEG_AF_NUM)
+
+GGally::ggpairs(
+  dat[, c("Q2_2_PE3_AF", "Q2_8_AF", "Q3_1_AVIS_VQ_AF", 
+          "Q5_2_AF", "Q5_7_LEG_AF_NUM")],
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+```
+
+\newpage{}
+
+## Analyse de la perception du rôle du référent d’après les AF :
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+GGally::ggpairs(
+  dat[, c("Q2_2_PE2_REF_ASE", "Q2_8_REF",
+          "Q3_1_AVIS_VQ_REFASE", 
+          "Q5_2_RSE")],
+  lower = list(continuous = my_fn), 
+  progress = FALSE
+  ) 
+
+```
+
+\newpage{}
+
+## Revérifier les tendances entre deux questions : Q5.7 (se sentir légitime) et Q5.9 (se sentir écouté) ?  
+```{r, fig.height=6, echo=FALSE, warning=FALSE, message=FALSE}
+# !!!!! Q5.7 (se sentir légitime) et Q5.9 (se sentir écouté)
+
+
+ggscatterstats(dat,
+               Q3_DIM_TOT, 
+               Q5_1_parti_insti,
+           bf.message = FALSE,
+           point.height.jitter = 0.3,
+           point.width.jitter = 0.3,
+           ylab = "Participation institutionnelle (1)",
+           xlab = "Score total Vie Quotidienne\n (implication de tous les interventions dans\n tous les aspects de la vie de l'enfant)") +
+  ggplot2::geom_rug(sides = "b")
+
+```
+
+\newpage{}
+
+## Q5.7 + Q5.9 = Pertinence de tester la création d’un score par l’addition de ces deux questions Q5.7 et Q5.9 ou les réponses à ces questions ne sont pas fiables (vous avez dit il faut se méfier) ?
+```{r, echo=FALSE}
+dat$Q5_9_ECOUTE_ENFANT[dat$Q5_9_ECOUTE_ENFANT==0] <- "Non"
+dat$Q5_9_ECOUTE_ENFANT[dat$Q5_9_ECOUTE_ENFANT==1] <- "Parfois"
+dat$Q5_9_ECOUTE_ENFANT[dat$Q5_9_ECOUTE_ENFANT==2] <- "Oui"
+
+ggbarstats(dat,Q5_9_ECOUTE_ENFANT,  Q5_7_LEG_AF, 
+           legend.title = "Nécessité de + donner son avis",
+           bf.message = FALSE,
+           ylab = "",
+           xlab = "Légitimité")
+```
+
+\newpage{}
+
+## Variables prédictives (Ancienneté)
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Ancienneté")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Ancienneté")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Ancienneté")
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Ancienneté")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Ancienneté")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Ancienneté")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Ancienneté")
+```
+
+### Participation mesure (Q2.1 + Q2.5)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q1_AF1_ANCIEN,
+             Q21_Q25,
+             bf.message = FALSE,
+             ylab = "Participation mesure (Q2.1 + Q2.5)")
+```
+
+## Variables prédictives (Nécessité + avis enfant)
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Nécessité + avis enfant")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Nécessité + avis enfant")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Nécessité + avis enfant")
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Nécessité + avis enfant")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Nécessité + avis enfant")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Nécessité + avis enfant")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Nécessité + avis enfant")
+```
+
+## Variables prédictives (Participation mesure (Q2.1 + Q2.5))
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q2_6_FREQ_RECUEIL_AVIS,
+             Q21_Q25,
+             bf.message = FALSE,
+             ylab = "Participation mesure (Q2.1 + Q2.5)")
+```
+
+
+\newpage{}
+
+### Niveau info enfant
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Niveau info enfant")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Niveau info enfant")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Niveau info enfant")
+
+
+!!!!!! regrouper les 2 modalités OU exclure outliers
+
+
+
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Niveau info enfant")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Niveau info enfant")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Niveau info enfant")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Niveau info enfant")
+```
+
+### Participation mesure (Q2.1 + Q2.5)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_GEN,
+             Q21_Q25,
+             bf.message = FALSE,
+             ylab = "Participation mesure (Q2.1 + Q2.5)")
+```
+
+## Variables prédictives (Niveau connaissances pro enfant)
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Niveau connaissances pro enfant")
+```
+
+### Participation mesure (Q2.1 + Q2.5)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q2_PERCEP_ENF_PRO,
+             Q21_Q25,
+             bf.message = FALSE,
+             ylab = "Participation mesure (Q2.1 + Q2.5)")
+```
+
+## Variables prédictives (Score participation mesure)
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Score participation mesure")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Score participation mesure")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Score participation mesure")
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Score participation mesure")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Score participation mesure")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Score participation mesure")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggscatterstats(dat, Q21_Q25,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Score participation mesure")
+```
+
+### Participation mesure (Q2.1 + Q2.5)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+"N/A"
+```
+
+## Variables prédictives (Légitimité)
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Légitimité")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Légitimité")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Légitimité")
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Légitimité")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Légitimité")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Légitimité")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Légitimité")
+```
+
+### Participation mesure (Q2.1 + Q2.5)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_7_LEG_AF,
+             Q21_Q25,
+             bf.message = FALSE,
+             ylab = "Participation mesure (Q2.1 + Q2.5)")
+```
+
+## Variables prédictives (Sentiment d'écoute)
+
+### PI1 (Q5-1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q5_1_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (1)",
+             xlab = "Sentiment d'écoute")
+```
+
+### PI2 (Q5-3)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q5_3_parti_insti,
+             bf.message = FALSE,
+             ylab = "Participation institutionnelle (2)",
+             xlab = "Sentiment d'écoute")
+```
+
+### PS au PPE (Q5-4)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q5_4_MOD_SOUHAIT_PART,
+             bf.message = FALSE,
+             ylab = "PS au PPE ",
+             xlab = "Sentiment d'écoute")
+```
+
+### PC à tout âge (Q4.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q4_1_PART_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne",
+             xlab = "Sentiment d'écoute")
+```
+
+### PC + 16 (Q4.2)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q4_2BIS_CIT,
+             bf.message = FALSE,
+             ylab = "Participation citoyenne (+16)",
+             xlab = "Sentiment d'écoute")
+```
+
+### PVQ enfant (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q3_1_AVIS_VQ_ENF,
+             bf.message = FALSE,
+             ylab = "PVQ enfant",
+             xlab = "Sentiment d'écoute")
+```
+
+### PVQ AF (Q3.1)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q3_1_AVIS_VQ_AF,
+             bf.message = FALSE,
+             ylab = "PVQ AF",
+             xlab = "Sentiment d'écoute")
+```
+
+### Participation mesure (Q2.1 + Q2.5)
+```{r, echo=FALSE, message=FALSE, results='hide'}
+ggbetweenstats(dat, Q5_9_ECOUTE_ENFANT,
+             Q21_Q25,
+             bf.message = FALSE,
+             xlab = "Sentiment d'écoute",
+             ylab = "Participation mesure (Q2.1 + Q2.5)")
+```

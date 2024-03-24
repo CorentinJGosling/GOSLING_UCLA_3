@@ -1,0 +1,363 @@
+---
+title: "UCLA Loneliness scale"
+author: "Gosling & Frijerman"
+date: "2024-03-24"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r, echo=FALSE}
+pvalue <- function(x, ...) {
+    y <- unlist(x)
+    g <- factor(rep(1:length(x), times=sapply(x, length)))
+    if (is.numeric(y)) {
+        p <- t.test(y ~ g)$p.value
+    } else {
+        p <- chisq.test(table(y, g), correct = FALSE)$p.value
+    }
+    c("", sub("<", "&lt;", format.pval(p, digits=3, eps=0.001)))
+}
+es <- function(x, ...) {
+    y <- unlist(x)
+    g <- factor(rep(1:length(x), times=sapply(x, length)))
+    if (is.numeric(y)) {
+        es <- lsr::cohensD(y ~ g)
+    } else {
+        chi <- suppressWarnings(chisq.test(table(y, g)))
+        es <- suppressWarnings(confintr::cramersv(chi))
+    }
+    c("", sub("<", "&lt;", format.pval(es, digits=3, eps=0.001)))
+}
+
+```
+
+```{r, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+library(tidyverse)
+library(forcats)
+library(emmeans)
+library(yhat)
+library(boot)
+library(GGally)
+library(ggstatsplot)
+```
+
+# Questions pour toi Ariel
+
+<b>Questions théoriques:</b><br>
+- pour la validité convergente (on espère une corrélation forte), je pensais prendre GAD 7 et PHQ9 mais pas MBI car le MBI est manquant pour pas mal de personnes <br>
+=> on prend aussi l'info sur le couple (ie, est-ce qu'on pense théoriquement que les personnes en couple se sentiront moins seules) ?<br>
+- pour la validité discriminante (on espère une corrélation faible), je pensais prendre l'année d'étude et l'age (les difficultés financières auraient été bien mais il y a pas mal de données manquantes)<br>
+
+<b>Questions pratiques</b><br>
+- le sens est-il le bon pour l'UCLA => 1 faible lonelinne, 3/4 fort<br>
+- il y a des items inversés sur le UCLA 20, tu peux m'indiquer lesquels?
+- il y a des items inversés sur le MBI, tu peux m'indiquer lesquels?
+- UCLA-3 est sur une échelle en 3pts et UCLA20 est en 4 pts, c'est correct? <br>
+- le PHQ9 a 10 items, on est d'accord que j'enleve l'item 10 ?<br> 
+- Si on garde le MBI, il y a le MBI-SS et MBI-HSS mais ils ne sont pas sur la même échelle, on peut faire qqch pour harmoniser les données sans passer par une standardisation des deux groupes ? 
+- que fait-on des césures / interruption d'études si on garde cette variable pour la validité discriminante? pour l'année d'études ? On vire les données ? <br>
+
+
+```{r, echo=FALSE, warning=FALSE, results='hide', message=FALSE}
+db = readxl::read_excel("ESEF_2023_donnees_corentin.xlsx") %>%
+  filter(Q3 != "Moins de 18 ans")
+
+db_demo = db[, c(1:3, 5:9)]
+names(db_demo) = c("Age", "Gender", "Marital_status",
+                   "Financ_diff", "Year_stud",
+                   "Internship_h_wk", "Work_h_wk",
+                   "Student_status")
+db_demo[db_demo=="Ne souhaite pas répondre"] <- NA
+db_demo$Age_cat = fct_recode(db_demo$Age, 
+                         "18-19" = "18-19", 
+                         "20-21" = "20-21", 
+                         "22-23" = "22-23",
+                         "24-25" = "24-25",
+                         ">25" = "Plus de 25 ans")
+
+db_demo$Age_dim = fct_recode(db_demo$Age, 
+                         "1" = "18-19", 
+                         "2" = "20-21", 
+                         "3" = "22-23",
+                         "4" = "24-25",
+                         "5" = "Plus de 25 ans")
+db_demo$Age_dim = as.numeric(db_demo$Age_dim)
+
+db_demo$Gender = fct_recode(db_demo$Gender, 
+                         "Women" = "Femme", 
+                         "Man" = "Homme", 
+                         "Other" = "Autre")
+db_demo$Marital_status = fct_recode(db_demo$Marital_status, 
+                         "Couple" = "En couple", 
+                         "Single" = "Célibataire")
+
+db_demo$Financ_diff_cat = db_demo$Financ_diff
+db_demo$Financ_diff_cat = fct_recode(db_demo$Financ_diff_cat, 
+                         "No difficulties" = "Pas du tout importantes", 
+                         "Little importance" = "Peu importantes",
+                         "Moderately important" = "Plutôt importantes",
+                         "Very important" = "Très importantes")
+
+db_demo$Financ_diff[db_demo$Financ_diff=="Financ_diff"] <- "1"
+db_demo$Financ_diff[db_demo$Financ_diff=="Peu importantes"] <- "2"
+db_demo$Financ_diff[db_demo$Financ_diff=="Plutôt importantes"] <- "3"
+db_demo$Financ_diff[db_demo$Financ_diff=="Très importantes"] <- "4"
+db_demo$Financ_diff = as.numeric(db_demo$Financ_diff)
+
+db_demo$Year_stud_cat = db_demo$Year_stud
+db_demo$Year_stud_cat = fct_recode(db_demo$Year_stud_cat, 
+                         "2nd year" = "2ème année", 
+                         "3rd year" = "3ème année",
+                         "4th year" = "4ème année",
+                         "5th year" = "5ème année")
+
+db_demo$Year_stud = as.numeric(substr(db_demo$Year_stud, 1, 1))
+# UCLA 3
+db_uc3 = db[, c("UCLA1",	"UCLA2",	"UCLA3")]
+db_uc3[db_uc3 == "Souvent"] <- "3"
+db_uc3[db_uc3 == "Parfois"] <- "2"
+db_uc3[db_uc3 == "Presque jamais"] <- "1"
+db_uc3 = data.frame(apply(db_uc3, 2, as.numeric))
+db_uc3$UCLA3_TOT = as.numeric(apply(db_uc3, 1, sum))
+
+# UCLA 20
+db_uc20 = db %>% select(starts_with("UCLA20"))
+db_uc20[db_uc20 == "Souvent"] <- "4"
+db_uc20[db_uc20 == "Quelques fois"] <- "3"
+db_uc20[db_uc20 == "Rarement"] <- "2"
+db_uc20[db_uc20 == "Jamais"] <- "1"
+db_uc20 = data.frame(apply(db_uc20, 2, as.numeric))
+db_uc20$UCLA20_TOT = as.numeric(apply(db_uc20, 1, sum))
+
+# PHQ9
+db_phq = db %>% select(starts_with("PHQ9"))
+db_phq[db_phq == "Presque tous les jours"] <- "4"
+db_phq[db_phq == "Plus de la moitié du temps"] <- "3"
+db_phq[db_phq == "Plusieurs jours"] <- "2"
+db_phq[db_phq == "Jamais"] <- "1"
+db_phq = data.frame(apply(db_phq, 2, as.numeric))
+db_phq$PHQ_TOT = as.numeric(apply(db_phq[,1:9], 1, sum))
+
+# GAD7
+db_gad = db %>% select(starts_with("GAD7"))
+db_gad[db_gad == "Presque tous les jours"] <- "4"
+db_gad[db_gad == "Plus de la moitié du temps"] <- "3"
+db_gad[db_gad == "Plusieurs jours"] <- "2"
+db_gad[db_gad == "Jamais"] <- "1"
+db_gad = data.frame(apply(db_gad, 2, as.numeric))
+db_gad$GAD_TOT = as.numeric(apply(db_gad, 1, sum))
+
+# MBI-SS
+db_mbi= db %>% select(starts_with("MBI_"))
+db_mbi[db_mbi == "Chaque jour"] <- "7"
+db_mbi[db_mbi == "Quelques fois par semaine"] <- "6"
+db_mbi[db_mbi == "Une fois par semaine"] <- "5"
+db_mbi[db_mbi == "Quelques fois par mois"] <- "4"
+db_mbi[db_mbi == "Une fois par mois"] <- "3"
+db_mbi[db_mbi == "Quelques fois par an"] <- "2"
+db_mbi[db_mbi == "Jamais"] <- "1"
+
+
+db_mbi_ss = data.frame(apply(db_mbi %>%
+                               select(!starts_with("MBI_HSS")),
+                             2, as.numeric))
+db_mbi_ss$MBI_SS_TOT = as.numeric(apply(db_mbi_ss, 1, sum))
+
+
+db_mbi_hss = data.frame(apply(db_mbi %>%
+                               select(starts_with("MBI_HSS")),
+                             2, as.numeric))
+db_mbi_hss$MBI_HSS_TOT = as.numeric(apply(db_mbi_hss, 1, sum))
+
+db_mbi_hss$MBI_TOT = ifelse(is.na(db_mbi_ss$MBI_SS_TOT),
+                            db_mbi_hss$MBI_HSS_TOT,
+                            db_mbi_ss$MBI_SS_TOT)
+```
+
+
+```{r,echo=FALSE}
+dat = cbind(db_demo, db_uc3, db_uc20, db_phq, 
+            db_gad, db_mbi_ss, db_mbi_hss)
+
+# Financ_diff 
+# UCLA3_TOT UCLA20_TOT PHQ_TOT GAD_TOT MBI_SS_TOT MBI_HSS_TOT
+```
+
+# 1. Demographic
+
+```{r, fig.height=3}
+table1::table1(~ Age_cat + 
+                 Marital_status + Year_stud_cat+
+                 # Internship_h_wk + Work_h_wk + 
+                 # Student_status + 
+                 Financ_diff_cat | Gender,
+                 # render.missing = NULL, 
+                 data = dat#, overall = "FALSE"
+               # , 
+               # extra.col=list(`P-value` = pvalue,
+               #                `SMD/V` = es)
+               )
+
+```
+
+# 2. Preliminary analyses{.tabset}
+
+## Distribution of the variables
+
+```{r, fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+GGally::ggpairs(dat[,c("UCLA3_TOT", "UCLA20_TOT",
+                       "PHQ_TOT","GAD_TOT",
+                       "Year_stud_cat", "Financ_diff_cat", "Age_cat")],
+    lower = list(
+      continuous=GGally::wrap("points",
+          position=position_jitter(height=1, width=1),
+          alpha = 0.1))) +
+  theme_bw() +  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+
+
+
+# "Age_dim", "Financ_diff","Year_stud"
+```
+
+
+## Heatmap 
+```{r}
+heat = data.frame(apply(dat[,c(
+               "PHQ_TOT","GAD_TOT","MBI_TOT",
+               "Age_dim", "Financ_diff", "Year_stud", "UCLA3_TOT", "UCLA20_TOT")], 2, as.numeric))
+
+ggstatsplot::ggcorrmat(heat)
+```
+
+# 3. Internal reliability{.tabset}
+
+## UCLA-3
+```{r}
+dat[, c("UCLA1",	"UCLA2",	"UCLA3")] %>%
+  psych::alpha()
+```
+
+## UCLA-20
+```{r}
+dat %>%
+  select(starts_with("UCLA20")) %>%
+  psych::alpha()
+```
+
+# 4. Concurrent validity
+
+```{r}
+res = cor.test(~UCLA3_TOT + UCLA20_TOT, dat)
+res
+summary(lm(UCLA20_TOT ~ ordered(UCLA3_TOT), dat))
+```
+
+```{r}
+ggscatterstats(dat, UCLA3_TOT, UCLA20_TOT,
+             bf.message = FALSE,
+             ylab = "UCLA-3 scale",
+             xlab = "UCLA-20 scale")
+
+```
+
+
+# 5. Convergent validity
+
+## PHQ-9
+
+approach 1: comparison of correlations (or lienar mixed models)
+```{r}
+cocor::cocor(~PHQ_TOT + UCLA3_TOT | PHQ_TOT + UCLA20_TOT,              
+             data=dat)
+```
+
+approach 2: dominance analysis
+```{r, warning=FALSE, message=FALSE}
+lm_phq = lm(PHQ_TOT ~ UCLA3_TOT + UCLA20_TOT, dat)
+regrOut <- calc.yhat(lm_phq)
+
+boot.out <- boot(dat,
+                 boot.yhat, 10,
+                 lmOut=lm_phq,
+                 regrout0=regrOut)
+result <- booteval.yhat(regrOut, boot.out, bty="perc")
+
+result$combCIpm
+result$combCIpmDiff
+```
+
+## GAD-7
+
+approach 1: comparison of correlations (or lienar mixed models)
+```{r}
+cocor::cocor(~GAD_TOT + UCLA3_TOT | GAD_TOT + UCLA20_TOT,              
+             data=dat)
+```
+
+approach 2: dominance analysis
+```{r, warning=FALSE, message=FALSE}
+lm_gad = lm(GAD_TOT ~ UCLA3_TOT + UCLA20_TOT, dat)
+regrOut <- calc.yhat(lm_gad)
+
+boot.out <- boot(dat,
+                 boot.yhat, 10,
+                 lmOut=lm_gad,
+                 regrout0=regrOut)
+result <- booteval.yhat(regrOut, boot.out, bty="perc")
+
+result$combCIpm
+result$combCIpmDiff
+```
+
+# 6. Discriminant validity
+
+to do
+
+# 7. Nomological net
+
+
+```{r}
+predictors = c("UCLA3_TOT", "UCLA20_TOT")
+outcomes = c("PHQ_TOT","GAD_TOT",
+                 "Age_dim", "Financ_diff", "Year_stud")
+res = NULL
+for (pred in predictors) {
+  for (out in outcomes) {
+    res_cor = NA
+    res_cor = cbind(pred, out,
+                    broom::tidy(cor.test(~ dat[, pred] + dat[, out])))
+    res = rbind(res, res_cor)
+  }
+}
+res$se = (res$conf.high - res$conf.low) / qnorm(.975)
+# res$name = paste0(res$pred, "_", res$out)
+res$name = res$out
+res$group = ifelse(res$out %in% c("PHQ_TOT", "GAD_TOT"), "Convergent validity", "Discriminant validity")
+library(ggforestplot)
+
+
+forestplot(
+  res,
+  colour = pred,
+  estimate = estimate,
+  se = se,
+  xlab = "Association of the UCLA-3/UCLA-20\n with various variables") +
+  ggforce::facet_col(
+    facets = ~group,
+    scales = "free_y",
+    space = "free"
+  )
+
+
+```
+
+
+
+```{r, echo=FALSE}
+net<-cor(dat[,c("PHQ_TOT","GAD_TOT",
+                 "Age_dim", "Financ_diff", "Year_stud")],
+          dat[, c("UCLA3_TOT", "UCLA20_TOT")], use="pairwise")
+
+```

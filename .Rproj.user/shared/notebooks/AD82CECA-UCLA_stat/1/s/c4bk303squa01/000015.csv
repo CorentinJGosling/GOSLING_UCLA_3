@@ -1,0 +1,12 @@
+"0","dat[, c(""UCLA1"",	""UCLA2"",	""UCLA3"")] %>%"
+"0","  psych::alpha()"
+"1","
+Reliability analysis "
+"1"," "
+"1"," 
+"
+"1","Call: "
+"1","psych::alpha(x = .)
+"
+"1","
+ "
